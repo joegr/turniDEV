@@ -1,0 +1,194 @@
+version: '3.8'
+
+services:
+  # Build the base image first
+  backend-base:
+    build:
+      context: .
+      dockerfile: docker/backend-base.Dockerfile
+    image: turni-backend-base:latest
+    profiles: ["build"]  # Only used for building, not as a service
+
+  # API Gateway
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - auth-service
+      - tournament-service
+      - team-service
+      - match-service
+      - notification-service
+      - frontend-service
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backend-base:
+        condition: service_completed_successfully
+      auth-db:
+        condition: service_healthy
+
+  # Tournament Service
+  tournament-service:
+    build:
+      context: .
+      dockerfile: tournament-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backend-base:
+        condition: service_completed_successfully
+      tournament-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+  # Team Service
+  team-service:
+    build:
+      context: .
+      dockerfile: team-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backend-base:
+        condition: service_completed_successfully
+      team-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      tournament-service:
+        condition: service_started
+
+  # Match Service
+  match-service:
+    build:
+      context: .
+      dockerfile: match-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backend-base:
+        condition: service_completed_successfully
+      match-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      team-service:
+        condition: service_started
+      tournament-service:
+        condition: service_started
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backend-base:
+        condition: service_completed_successfully
+      notification-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+  # Frontend Service
+  frontend-service:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+
+  # Databases
+  auth-db:
+    image: postgres:15-alpine
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=auth_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tournament-db:
+    image: postgres:15-alpine
+    volumes:
+      - tournament_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=tournament_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d tournament_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  team-db:
+    image: postgres:15-alpine
+    volumes:
+      - team_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=team_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d team_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  match-db:
+    image: postgres:15-alpine
+    volumes:
+      - match_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=match_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d match_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification-db:
+    image: postgres:15-alpine
+    volumes:
+      - notification_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=notification_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  auth_data:
+  tournament_data:
+  team_data:
+  match_data:
+  notification_data:
+
+networks:
+  default:
+    driver: bridge
+    internal: true  # Keep services internal 

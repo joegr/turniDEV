@@ -1,0 +1,3 @@
+django-allauth>=0.58.2
+django-rest-auth>=0.9.5
+django-cors-headers>=4.3.1 
