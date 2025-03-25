@@ -16,8 +16,9 @@ WORKDIR /app/service
 COPY auth-service/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD /healthcheck.sh
+# Add health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+  CMD curl -f http://localhost:8001/health/ || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8001", "auth.wsgi:application"] 
+CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--workers=2", "--threads=4", "--timeout=120", "auth.wsgi:application"] 
