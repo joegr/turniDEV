@@ -1,2 +1,9 @@
 django-filter>=23.5
-django-redis>=5.4.0 
+pillow>=10.1.0  # For match screenshots/evidence
+celery>=5.3.6  # For asynchronous tasks
+redis>=5.0.1  # For Celery broker
+django-celery-beat>=2.5.0  # For scheduled tasks
+opencv-python-headless>=4.8.1.78  # For image processing/verification
+pytesseract>=0.3.10  # For OCR on match screenshots
+django-storages>=1.14.2  # For file storage (S3, etc)
+drf-yasg>=1.21.7  # Swagger/OpenAPI documentation 

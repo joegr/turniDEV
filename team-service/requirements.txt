@@ -1,2 +1,7 @@
-Pillow>=10.1.0
-django-storages>=1.14.2 
+django-filter>=23.5
+pillow>=10.1.0  # For image processing (team logos, avatars)
+django-phonenumber-field>=7.2.0  # For phone number validation
+django-countries>=7.5.1  # For country fields
+django-allauth>=0.58.2  # For social authentication
+django-invitations>=2.1.0  # For team invitations
+drf-yasg>=1.21.7  # Swagger/OpenAPI documentation 

@@ -1,36 +1,53 @@
-# Build stage
-FROM node:18-alpine AS build
+## Build stage
+FROM node:20-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
+# Set environment variables
+ENV NODE_ENV=production \
+    REACT_APP_API_URL=/api
+
 # Copy package.json files
-COPY frontend/package*.json ./
+COPY frontend/package.json frontend/package-lock.json* ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --production=false
 
-# Copy the rest of the frontend code
-COPY frontend/public ./public
+# Copy source code
 COPY frontend/src ./src
+COPY frontend/public ./public
+COPY frontend/tsconfig.json* frontend/.eslintrc* frontend/.babelrc* ./
 
-# Build the React app
+# Build the app
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+## Production stage
+FROM nginx:1.25-alpine
 
-# Copy the build output from the build stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Set environment variables
+ENV NGINX_PORT=80
 
-# Copy custom nginx configuration
+# Copy build artifacts from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
+# Create required directories
+RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
+    chown -R nginx:nginx /var/cache/nginx /var/log/nginx /usr/share/nginx/html /var/run && \
+    chmod -R 755 /usr/share/nginx/html
+
+# Switch to non-root user for security
+USER nginx
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:80/ || exit 1
+
+# Expose port
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
-
-# Start Nginx
+# Start Nginx server
 CMD ["nginx", "-g", "daemon off;"] 
