@@ -1,5 +1,5 @@
 ## Build stage
-FROM node:20-alpine AS builder
+FROM node:20-alpine as builder
 
 # Set working directory
 WORKDIR /app
@@ -9,10 +9,10 @@ ENV NODE_ENV=production \
     REACT_APP_API_URL=/api
 
 # Copy package.json files
-COPY frontend/package.json frontend/package-lock.json* ./
+COPY frontend/package.json ./
 
 # Install dependencies
-RUN npm ci --production=false
+RUN npm install --production=false
 
 # Copy source code
 COPY frontend/src ./src
@@ -23,7 +23,7 @@ COPY frontend/tsconfig.json* frontend/.eslintrc* frontend/.babelrc* ./
 RUN npm run build
 
 ## Production stage
-FROM nginx:1.25-alpine
+FROM nginx:1.25-alpine as production
 
 # Set environment variables
 ENV NGINX_PORT=80
@@ -34,10 +34,9 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Copy nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create required directories
+# Fix permissions issues
 RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \
-    chown -R nginx:nginx /var/cache/nginx /var/log/nginx /usr/share/nginx/html /var/run && \
-    chmod -R 755 /usr/share/nginx/html
+    chmod -R 777 /var/cache/nginx /var/log/nginx /var/run
 
 # Switch to non-root user for security
 USER nginx
