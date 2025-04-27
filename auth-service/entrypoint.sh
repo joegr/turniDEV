@@ -26,7 +26,7 @@ if [ ! -d "/app/service/auth" ]; then
             su -c "cat > auth/wsgi.py << 'EOF'
 import os
 from django.core.wsgi import get_wsgi_application
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'turni_auth.settings')
 application = get_wsgi_application()
 EOF" appuser
         fi
@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'auth',
+    'turni_auth.apps.TurniAuthConfig',
 ]
 
 MIDDLEWARE = [
@@ -66,7 +66,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'auth.urls'
+ROOT_URLCONF = 'turni_auth.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -83,7 +83,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'auth.wsgi.application'
+WSGI_APPLICATION = 'turni_auth.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -142,7 +142,7 @@ import os
 import sys
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'turni_auth.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

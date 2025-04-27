@@ -3,7 +3,7 @@ FROM turni-backend-base:latest
 # Set service-specific environment variables
 ENV SERVICE_PORT=8001 \
     SERVICE_NAME=auth \
-    DJANGO_SETTINGS_MODULE=auth.settings
+    DJANGO_SETTINGS_MODULE=turni_auth.settings
 
 # Set working directory for the service
 WORKDIR /app/service
@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy service code
 COPY --chown=appuser:appuser auth-service/auth /app/service/auth
+COPY --chown=appuser:appuser auth-service/turni_auth /app/service/turni_auth
 COPY --chown=appuser:appuser auth-service/manage.py /app/service/manage.py
 
 # Copy service-specific entrypoint
@@ -34,4 +35,4 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 # Switch back to appuser for running the service
 USER appuser
-CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--workers=2", "--threads=4", "--timeout=120", "auth.wsgi:application"] 
+CMD ["gunicorn", "--bind", "0.0.0.0:8001", "--workers=2", "--threads=4", "--timeout=120", "turni_auth.wsgi:application"] 
