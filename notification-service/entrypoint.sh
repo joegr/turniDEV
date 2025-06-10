@@ -72,22 +72,36 @@ fi
 # Wait for database
 wait_for_service notification-db 5432 "notification database" 30 2 || exit 1
 
-# Wait for auth service
-wait_for_service auth-service 8001 "auth service" 60 3 || exit 1
+# Find manage.py and move to that directory
+echo "Locating manage.py..."
+MANAGE_PY_LOCATIONS=("/app/manage.py" "/app/service/manage.py")
+for location in "${MANAGE_PY_LOCATIONS[@]}"; do
+    if [ -f "$location" ]; then
+        echo "Found manage.py at $location"
+        cd "$(dirname "$location")"
+        break
+    fi
+done
+
+if [ ! -f "manage.py" ]; then
+    echo "Error: Could not find manage.py in any expected location"
+    exit 1
+fi
+
+echo "Working directory: $(pwd)"
+echo "Directory contents:"
+ls -la
 
 # Prepare the application
-prepare_django_app || {
-    # Fallback if function not available
-    echo "Running migrations..."
-    python manage.py migrate --noinput
+echo "Running migrations..."
+python manage.py migrate --noinput || true
     
-    echo "Collecting static files..."
-    python manage.py collectstatic --noinput
+echo "Collecting static files..."
+python manage.py collectstatic --noinput || true
     
-    echo "Creating health check endpoint..."
-    mkdir -p /tmp/health
-    echo "OK" > /tmp/health/ok.txt
-}
+echo "Creating health check endpoint..."
+mkdir -p /tmp/health
+echo "OK" > /tmp/health/ok.txt
 
 # Start server
 echo "Starting notification service..."

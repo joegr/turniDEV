@@ -12,8 +12,9 @@ WORKDIR /app/service
 COPY --chown=appuser:appuser notification-service/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy service code
-COPY --chown=appuser:appuser notification-service /app/service
+# Copy service code - be explicit to ensure files go to the right location
+COPY --chown=appuser:appuser notification-service/notification /app/service/notification
+COPY --chown=appuser:appuser notification-service/manage.py /app/service/manage.py
 
 # Copy service-specific entrypoint
 COPY --chown=appuser:appuser notification-service/entrypoint.sh /entrypoint.sh
@@ -33,4 +34,4 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 # Switch back to appuser for running the service
 USER appuser
-CMD ["gunicorn", "--bind", "0.0.0.0:8005", "--workers=2", "--threads=4", "--timeout=120", "notification.wsgi:application"] 
+CMD ["gunicorn", "--bind", "0.0.0.0:8005", "--workers=2", "--threads=4", "--timeout=120", "notification.wsgi:application"]

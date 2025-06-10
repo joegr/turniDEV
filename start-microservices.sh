@@ -23,29 +23,28 @@ docker compose down -v --remove-orphans
 echo "Step 3: Starting databases..."
 docker compose up -d auth-db tournament-db team-db match-db notification-db
 
-# Wait for databases to be ready
+# Wait for databases to be ready using docker compose built-in health checks
 echo "Step 4: Waiting for databases to be healthy..."
-sleep 10
+docker compose up -d --wait auth-db tournament-db team-db match-db notification-db
 
-# Start the auth service
+# Start the auth service with wait
 echo "Step 5: Starting auth service..."
-docker compose up -d auth-service
+docker compose up -d --wait auth-service
 
-# Wait for auth service to be ready
-echo "Step 6: Waiting for auth service to initialize..."
-sleep 15
+# Start other backend services in dependency order with wait
+echo "Step 6: Starting tournament service..."
+docker compose up -d --wait tournament-service
 
-# Start other backend services
-echo "Step 7: Starting other backend services..."
-docker compose up -d tournament-service team-service match-service notification-service
+echo "Step 7: Starting team service..."
+docker compose up -d --wait team-service
 
-# Wait for backend services to be ready
-echo "Step 8: Waiting for backend services to initialize..."
-sleep 15
+echo "Step 8: Starting match and notification services..."
+docker compose up -d --wait match-service notification-service
 
 # Start frontend and nginx
 echo "Step 9: Starting frontend and nginx..."
-docker compose up -d frontend-service nginx
+docker compose up -d --wait frontend-service
+docker compose up -d --wait nginx
 
 # Show running services
 echo "Step 10: Checking service status..."

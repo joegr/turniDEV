@@ -19,12 +19,18 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - auth-service
-      - tournament-service
-      - team-service
-      - match-service
-      - notification-service
-      - frontend-service
+      auth-service:
+        condition: service_healthy
+      tournament-service:
+        condition: service_healthy
+      team-service:
+        condition: service_healthy
+      match-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      frontend-service:
+        condition: service_started
     networks:
       - tournament-net
 
@@ -45,6 +51,12 @@ services:
     hostname: auth-service
     volumes:
       - ./common:/app/common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Tournament Service
   tournament-service:
@@ -64,6 +76,12 @@ services:
     hostname: tournament-service
     volumes:
       - ./common:/app/common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Team Service
   team-service:
@@ -79,12 +97,18 @@ services:
       auth-service:
         condition: service_healthy
       tournament-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - tournament-net
     hostname: team-service
     volumes:
       - ./common:/app/common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Match Service
   match-service:
@@ -100,14 +124,18 @@ services:
       auth-service:
         condition: service_healthy
       team-service:
-        condition: service_started
-      tournament-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - tournament-net
     hostname: match-service
     volumes:
       - ./common:/app/common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Notification Service
   notification-service:
@@ -127,6 +155,12 @@ services:
     hostname: notification-service
     volumes:
       - ./common:/app/common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # Frontend Service
   frontend-service:
@@ -256,4 +290,3 @@ volumes:
 networks:
   tournament-net:
     driver: bridge
-    internal: true  # Keep services internal

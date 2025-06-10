@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Make team service debugging easier
+  team-service:
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_DEBUG=True
+    volumes:
+      - ./team-service:/app/debug-volume
+    entrypoint: ["sh", "-c", "ls -la /app && ls -la /app/service && /entrypoint.sh && exit 1"]
+    command: ["gunicorn", "--bind", "0.0.0.0:8003", "--workers=1", "--threads=1", "--timeout=300", "team.wsgi:application"]
+  
+  # Make notification service debugging easier
+  notification-service:
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_DEBUG=True
+    volumes:
+      - ./notification-service:/app/debug-volume
+    entrypoint: ["sh", "-c", "ls -la /app && ls -la /app/service && /entrypoint.sh && exit 1"]
+    command: ["gunicorn", "--bind", "0.0.0.0:8005", "--workers=1", "--threads=1", "--timeout=300", "notification.wsgi:application"]
+  
+  # Frontend service with development mode enabled
+  frontend-service:
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=/api
+    ports:
+      - "3000:80"
+    
+  # Add explicit port for auth service
+  auth-service:
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_DEBUG=True
+    ports:
+      - "8001:8001" 

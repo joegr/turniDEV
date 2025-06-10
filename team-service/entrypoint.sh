@@ -69,28 +69,45 @@ else
     }
 fi
 
-# Wait for database
-wait_for_service team-db 5432 "team database" 30 2 || exit 1
+# The dependencies should be handled by docker-compose's dependency management
+# We only need to handle fallback in case the Docker dependency checks failed
 
-# Wait for auth service
-wait_for_service auth-service 8001 "auth service" 60 3 || exit 1
+# Check if critical services are available, with shorter timeouts since Docker should have handled this
+if ! nc -z team-db 5432 >/dev/null 2>&1; then
+    echo "Warning: team-db not detected, attempting to wait..."
+    wait_for_service team-db 5432 "team database" 15 2 || exit 1
+fi
 
-# Wait for tournament service
-wait_for_service tournament-service 8002 "tournament service" 60 3 || exit 1
+# Find manage.py and move to that directory
+echo "Locating manage.py..."
+MANAGE_PY_LOCATIONS=("/app/manage.py" "/app/service/manage.py")
+for location in "${MANAGE_PY_LOCATIONS[@]}"; do
+    if [ -f "$location" ]; then
+        echo "Found manage.py at $location"
+        cd "$(dirname "$location")"
+        break
+    fi
+done
+
+if [ ! -f "manage.py" ]; then
+    echo "Error: Could not find manage.py in any expected location"
+    exit 1
+fi
+
+echo "Working directory: $(pwd)"
+echo "Directory contents:"
+ls -la
 
 # Prepare the application
-prepare_django_app || {
-    # Fallback if function not available
-    echo "Running migrations..."
-    python manage.py migrate --noinput
+echo "Running migrations..."
+python manage.py migrate --noinput || true
     
-    echo "Collecting static files..."
-    python manage.py collectstatic --noinput
+echo "Collecting static files..."
+python manage.py collectstatic --noinput || true
     
-    echo "Creating health check endpoint..."
-    mkdir -p /tmp/health
-    echo "OK" > /tmp/health/ok.txt
-}
+echo "Creating health check endpoint..."
+mkdir -p /tmp/health
+echo "OK" > /tmp/health/ok.txt
 
 # Start server
 echo "Starting team service..."

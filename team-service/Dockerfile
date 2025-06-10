@@ -12,8 +12,9 @@ WORKDIR /app/service
 COPY --chown=appuser:appuser team-service/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy service code
-COPY --chown=appuser:appuser team-service /app/service
+# Copy service code - be explicit to ensure files go to the right location
+COPY --chown=appuser:appuser team-service/team /app/service/team
+COPY --chown=appuser:appuser team-service/manage.py /app/service/manage.py
 
 # Copy service-specific entrypoint
 COPY --chown=appuser:appuser team-service/entrypoint.sh /entrypoint.sh

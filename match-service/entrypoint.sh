@@ -69,17 +69,14 @@ else
     }
 fi
 
-# Wait for database
-wait_for_service match-db 5432 "match database" 30 2 || exit 1
+# The dependencies should be handled by docker-compose's dependency management
+# We only need to handle fallback in case the Docker dependency checks failed
 
-# Wait for auth service
-wait_for_service auth-service 8001 "auth service" 60 3 || exit 1
-
-# Wait for team service
-wait_for_service team-service 8003 "team service" 60 3 || exit 1
-
-# Wait for tournament service
-wait_for_service tournament-service 8002 "tournament service" 60 3 || exit 1
+# Check if critical services are available, with shorter timeouts since Docker should have handled this
+if ! nc -z match-db 5432 >/dev/null 2>&1; then
+    echo "Warning: match-db not detected, attempting to wait..."
+    wait_for_service match-db 5432 "match database" 15 2 || exit 1
+fi
 
 # Prepare the application
 prepare_django_app || {

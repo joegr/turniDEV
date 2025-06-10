@@ -16,6 +16,54 @@ The application is built using a microservices architecture with the following s
 
 Each service has its own database and business logic, communicating with other services via REST APIs.
 
+### Service Dependencies
+
+The services have the following dependency relationships:
+
+```
+                     ┌─────────────┐
+                     │ Auth DB     │
+                     └─────────────┘
+                            ▲
+                            │
+                     ┌─────────────┐           ┌─────────────┐
+                     │ Auth Service│◄──────────┤ Frontend    │
+                     └─────────────┘           └─────────────┘
+                            ▲                          ▲
+                            │                          │
+          ┌─────────────────┼──────────────┐          │
+          │                 │              │          │
+┌─────────────┐    ┌─────────────┐   ┌─────────────┐  │
+│Tournament DB│    │Team DB      │   │Match DB     │  │
+└─────────────┘    └─────────────┘   └─────────────┘  │
+      ▲                  ▲                 ▲          │
+      │                  │                 │          │
+┌─────────────┐    ┌─────────────┐   ┌─────────────┐  │
+│Tournament   │◄───┤Team Service │◄──┤Match Service│  │
+│Service      │    └─────────────┘   └─────────────┘  │
+└─────────────┘          │                 │          │
+      ▲                  │                 │          │
+      │                  │                 ▼          │
+      │                  │          ┌─────────────┐   │
+      │                  │          │Notification │   │
+      │                  │          │Service      │◄──┘
+      │                  │          └─────────────┘
+      │                  │                 ▲
+      │                  │                 │
+      │                  │          ┌─────────────┐
+      └──────────────────┴──────────┤Notification │
+                                    │DB           │
+                                    └─────────────┘
+```
+
+Start order for services:
+1. All databases (in parallel)
+2. Auth Service
+3. Tournament Service
+4. Team Service
+5. Match Service and Notification Service (in parallel)
+6. Frontend and Nginx (in parallel)
+
 ## Prerequisites
 
 - Docker and Docker Compose
