@@ -212,4 +212,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-For any questions or feedback, please contact the development team at dev@turni.com. 
+For any questions or feedback, please contact the development team at the FC 25 clubs discord server.
